@@ -1,5 +1,6 @@
 const leaveService = require("./leave_service");
-
+const Employee = require("../models/employee_model");
+const Role = require("../models/role_model");
 const createLeave = async (req, res) => {
     try {
         const startDate = new Date(req.body.startDate);
@@ -17,6 +18,7 @@ const createLeave = async (req, res) => {
     } catch (error) {
         return res.status(400).json({
             message: error.message,
+            req: req.body,
         });
     }
 };
@@ -44,9 +46,22 @@ const cancelLeave = async (req, res) => {
 
 const leaveStatus = async (req, res) => {
     try {
-        const { role, status } = req.body;
+        const { employeeId, status } = req.body;
 
-        if (!["manager", "admin"].includes(role)) {
+        const employee = await Employee.findById(employeeId).populate("role");
+
+        console.log(employee);
+        console.log(employee.role);
+        console.log(employee.role?.roleName);
+
+        if (!employee) {
+            return res.status(404).json({
+                message: "Employee not found",
+            });
+        }
+        if (
+            employee.role.roleName !== "Manager"
+        ) {
             return res.status(403).json({
                 message: "You are not authorized to change leave status",
             });

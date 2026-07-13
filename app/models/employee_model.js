@@ -1,5 +1,3 @@
-// app/models/employee_model.js
-
 const mongoose = require("mongoose");
 
 const employeeSchema = new mongoose.Schema(
@@ -28,18 +26,19 @@ const employeeSchema = new mongoose.Schema(
       required: true,
     },
 
-    dept_id: {
+    dept: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Department",
       default: null,
     },
 
-    role_id: {
+    role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
       default: null,
     },
-        leaveBalance: {
+
+    leaveBalance: {
       type: Number,
       default: 10,
       min: 0,

@@ -2,6 +2,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const Employee = require("../models/employee_model");
+const Role = require("../models/role_model");
+const employeeRole = Role.findOne({ roleName: "Employee" });
 
 
 const registerUser = async (data) => {
@@ -21,6 +23,7 @@ const registerUser = async (data) => {
     email,
     phone,
     password_hash,
+    
   });
 
   return {
@@ -30,6 +33,7 @@ const registerUser = async (data) => {
       id: employee._id,
       name: employee.name,
       email: employee.email,
+      role: employeeRole ? employeeRole._id : null,
     },
   };
 };
