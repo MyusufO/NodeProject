@@ -15,6 +15,17 @@ const registerUser = async (data) => {
   if (existingEmployee) {
     throw new Error("Employee already exists");
   }
+  const existingPhone= await Employee.findOne({phone});
+  if(existingPhone){
+    throw new Error("Phone Number Exists")
+  }
+  const employeeRole = await Role.findOne({
+        roleName: "Employee",
+    });
+  
+  if (!employeeRole) {
+        throw new Error("Default Employee role not found");
+    }
 
   const password_hash = await bcrypt.hash(password, 10);
 
@@ -23,6 +34,7 @@ const registerUser = async (data) => {
     email,
     phone,
     password_hash,
+    role: employeeRole._id,
     
   });
 
@@ -43,8 +55,7 @@ const loginUser = async (data) => {
 
   const { email, password } = data;
 
-  const employee = await Employee.findOne({ email });
-
+  const employee = await Employee.findOne({ email }).populate("role");
   if (!employee) {
     throw new Error("Invalid email or password");
   }
@@ -57,17 +68,17 @@ const loginUser = async (data) => {
   if (!passwordMatch) {
     throw new Error("Invalid email or password");
   }
-
+  console.log(employee);
   const token = jwt.sign(
     {
       employee_id: employee._id,
+      role: employee.role.roleName,
     },
     process.env.JWT_SECRET,
     {
       expiresIn: "1d",
     }
   );
-
   return {
     message: "Login successful",
     token,

@@ -1,16 +1,55 @@
 const express = require("express");
 const router = express.Router();
 
+const authorize = require("../middleware/authorise");
+const validateSchema = require("../middleware/validateSchema");
+
 const {
-    createLeave,
-    cancelLeave,
-    leaveStatus,
-    leaveBalance,
+  createLeaveSchema,
+  cancelLeaveSchema,
+  leaveStatusSchema,
+  leaveBalanceSchema
+} = require("../../validation/leaveValidation");
+
+const {
+  createLeave,
+  cancelLeave,
+  leaveStatus,
+  leaveBalance,
+  leaveHistory
 } = require("./leave_controller");
 
-router.post("/", createLeave);
-router.delete("/:id", cancelLeave);
-router.put("/:id/status", leaveStatus);
-router.get("/:employeeId/balance", leaveBalance);
+// Apply leave
+router.post(
+  "/",
+  validateSchema(createLeaveSchema),
+  createLeave
+);
 
+// Cancel leave
+router.delete(
+  "/:id",
+  validateSchema(cancelLeaveSchema, "params"),
+  cancelLeave
+);
+
+// Approve/Reject leave (Manager only)
+router.put(
+  "/:id/status",
+  authorize("Manager"),
+  validateSchema(leaveStatusSchema),
+  leaveStatus
+);
+
+// Leave balance
+router.get(
+  "/:employeeId/balance",
+  validateSchema(leaveBalanceSchema, "params"),
+  leaveBalance
+);
+
+router.get(
+    "/history",
+    leaveHistory
+);
 module.exports = router;

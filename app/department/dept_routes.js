@@ -8,12 +8,47 @@ const {
   deleteDepartment,
   UpdateEmployeeDepartment
 } = require('./dept_controller');
+const authenticateJWT = require("../middleware/authMiddleware");
+const authorize = require("../middleware/authorise");
+const validateSchema = require("../middleware/validateSchema");
+
+const {
+  createDepartmentSchema,
+  updateDepartmentSchema,
+  departmentIdSchema,
+  updateEmployeeDepartmentSchema,
+} =require("../../validation/departmentValidation");
 
 router.get("/", getAllDepartments);
-router.get("/:id", getDepartmentById);
-router.post("/", createDepartment);
-router.put("/:id", updateDepartment);
-router.delete("/:id", deleteDepartment);
-router.put("/employees/:empId/departments/:deptId", UpdateEmployeeDepartment);
-
+router.get(
+  "/:id",
+  validateSchema(departmentIdSchema, "params"),
+  getDepartmentById
+);
+router.post(
+  "/",
+  authorize("Admin"),
+  validateSchema(createDepartmentSchema),
+  createDepartment
+);
+router.put(
+  "/:id",
+  authorize("Admin"),
+  validateSchema(updateDepartmentSchema),
+  updateDepartment
+);
+router.delete(
+  "/:id",
+  authenticateJWT,
+  authorize("Admin"),
+  validateSchema(departmentIdSchema, "params"),
+  deleteDepartment
+);
+router.put(
+  "/employees/:empId/departments/:deptId",
+  authenticateJWT,
+  authorize("Admin"),
+  validateSchema(updateEmployeeDepartmentSchema),
+  UpdateEmployeeDepartment
+);
 module.exports = router;

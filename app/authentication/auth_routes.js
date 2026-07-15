@@ -1,6 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const {login, register} = require("./auth_controller");
+
+const { login, register } = require("./auth_controller");
+
+const validateSchema = require("../middleware/validateSchema");
+
+const {
+  registerSchema,
+  loginSchema,
+} = require("../../validation/authValidation");
 
 router.get("/", (req, res) => {
   res.status(200).json({
@@ -8,10 +16,16 @@ router.get("/", (req, res) => {
   });
 });
 
-router.post("/register", register);
+router.post(
+  "/register",
+  validateSchema(registerSchema),
+  register
+);
 
-router.post("/login", login);
-
-
+router.post(
+  "/login",
+  validateSchema(loginSchema),
+  login
+);
 
 module.exports = router;

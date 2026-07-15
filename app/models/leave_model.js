@@ -10,7 +10,6 @@ const leaveSchema = new mongoose.Schema(
     leaveType: {
       type: String,
       enum: ["Sick", "Casual", "Annual", "Maternity", "Paternity", "Unpaid"],
-      required: true,
     },
     startDate: {
       type: Date,
@@ -27,7 +26,7 @@ const leaveSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Pending", "Approved", "Rejected"],
+      enum: ["Pending", "Approved", "Rejected","Cancelled"],
       default: "Pending",
     },
     appliedOn: {

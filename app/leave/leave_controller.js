@@ -1,8 +1,10 @@
 const leaveService = require("./leave_service");
 const Employee = require("../models/employee_model");
-const Role = require("../models/role_model");
+
 const createLeave = async (req, res) => {
     try {
+        const employeeId = req.user.employee_id;
+
         const startDate = new Date(req.body.startDate);
         const endDate = new Date(req.body.endDate);
 
@@ -12,26 +14,30 @@ const createLeave = async (req, res) => {
             });
         }
 
-        const leave = await leaveService.createLeave(req.body);
+        const leaveData = {
+            employee: employeeId,
+            startDate: req.body.startDate,
+            endDate: req.body.endDate,
+            leaveType: req.body.leaveType,
+            reason: req.body.reason,
+        };
+
+        const leave = await leaveService.createLeave(leaveData);
 
         return res.status(201).json(leave);
     } catch (error) {
         return res.status(400).json({
             message: error.message,
-            req: req.body,
         });
     }
 };
 
 const cancelLeave = async (req, res) => {
     try {
-        const leave = await leaveService.cancelLeave(req.params.id);
-
-        if (!leave) {
-            return res.status(404).json({
-                message: "Leave not found",
-            });
-        }
+        const leave = await leaveService.cancelLeave(
+            req.params.id,
+            req.user.employee_id
+        );
 
         return res.status(200).json({
             message: "Leave cancelled successfully",
@@ -46,28 +52,25 @@ const cancelLeave = async (req, res) => {
 
 const leaveStatus = async (req, res) => {
     try {
-        const { employeeId, status } = req.body;
+        const manager = await Employee.findById(
+            req.user.employee_id
+        ).populate("role");
 
-        const employee = await Employee.findById(employeeId).populate("role");
-
-        console.log(employee);
-        console.log(employee.role);
-        console.log(employee.role?.roleName);
-
-        if (!employee) {
+        if (!manager) {
             return res.status(404).json({
-                message: "Employee not found",
+                message: "Manager not found",
             });
         }
-        if (
-            employee.role.roleName !== "Manager"
-        ) {
+
+        if (manager.role?.roleName !== "Manager") {
             return res.status(403).json({
                 message: "You are not authorized to change leave status",
             });
         }
 
-        if (!["Pending", "Approved", "Rejected"].includes(status)) {
+        const { status, remarks } = req.body;
+
+        if (!["Approved", "Rejected"].includes(status)) {
             return res.status(400).json({
                 message: "Invalid leave status",
             });
@@ -75,14 +78,10 @@ const leaveStatus = async (req, res) => {
 
         const leave = await leaveService.leaveStatus(
             req.params.id,
-            status
+            status,
+            req.user.employee_id,
+            remarks
         );
-
-        if (!leave) {
-            return res.status(404).json({
-                message: "Leave not found",
-            });
-        }
 
         return res.status(200).json({
             message: "Leave status updated successfully",
@@ -98,10 +97,23 @@ const leaveStatus = async (req, res) => {
 const leaveBalance = async (req, res) => {
     try {
         const balance = await leaveService.leaveBalance(
-            req.params.employeeId
+            req.user.employee_id
         );
 
         return res.status(200).json(balance);
+    } catch (error) {
+        return res.status(400).json({
+            message: error.message,
+        });
+    }
+};
+const leaveHistory = async (req, res) => {
+    try {
+        const history = await leaveService.getLeaveHistory(
+            req.user.employee_id
+        );
+
+        return res.status(200).json(history);
     } catch (error) {
         return res.status(400).json({
             message: error.message,
@@ -114,4 +126,5 @@ module.exports = {
     cancelLeave,
     leaveStatus,
     leaveBalance,
+    leaveHistory
 };

@@ -12,10 +12,29 @@ const createDepartment = async (req, res) => {
 
 const getDepartments = async (req, res) => {
   try {
-    const departments = await Department.find();
-    res.status(200).json(departments);
+    const { page = 1, limit = 10 } = req.query;
+
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const departments = await Department.find()
+      .skip(skip)
+      .limit(limitNumber);
+
+    const totalDepartments = await Department.countDocuments();
+
+    res.status(200).json({
+      currentPage: pageNumber,
+      totalPages: Math.ceil(totalDepartments / limitNumber),
+      totalDepartments,
+      departments,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 

@@ -54,9 +54,26 @@ const searchEmployees = async (req, res) => {
     }
 };
 
+const updateEmployeeRole = async (req, res) => {
+    try {
+        const { employeeId, roleId } = req.body;
+        const employee = await employeeService.updateEmployeeRole(employeeId, roleId);
+
+        return res.status(200).json({
+            message: "Employee role updated successfully",
+            employee,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            message: error.message,
+        });
+    }
+};
+
 module.exports = {
     updateProfile,
     deleteProfile,
     getEmployeeDetails,
     searchEmployees,
+    updateEmployeeRole,
 };

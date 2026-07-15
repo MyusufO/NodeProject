@@ -1,5 +1,5 @@
 const Employee = require("../models/employee_model");
-
+const getPagination=require("../middleware/pagination")
 
 
 const updateProfile = async (data) => {
@@ -51,32 +51,73 @@ const getEmployeeDetails = async (employeeId) => {
 }
 
 const searchEmployees = async (query) => {
-    const { name, email, phone, role, department } = query;
+    const {
+        name,
+        email,
+        phone,
+        role,
+        department,
+        page = 1,
+        limit = 10,
+    } = query;
+
     if (!name && !email && !phone && !role && !department) {
         throw new Error("At least one search parameter is required");
     }
+
     let findQuery = {};
-    if(name){
+
+    if (name) {
         findQuery.name = { $regex: name, $options: "i" };
     }
-    if(email){
+
+    if (email) {
         findQuery.email = { $regex: email, $options: "i" };
     }
-    if(phone){
+
+    if (phone) {
         findQuery.phone = { $regex: phone, $options: "i" };
     }
-    if(role){
+
+    if (role) {
         findQuery.role = role;
     }
-    if(department){
+
+    if (department) {
         findQuery.dept = department;
     }
-    const employees = await Employee.find(findQuery);
-    return employees;
-}
+
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+
+    const employees = await Employee.find(findQuery)
+        .skip((pageNumber - 1) * limitNumber)
+        .limit(limitNumber);
+
+    const totalEmployees = await Employee.countDocuments(findQuery);
+
+    return {
+        currentPage: pageNumber,
+        totalPages: Math.ceil(totalEmployees / limitNumber),
+        totalEmployees,
+        employees,
+    };
+};
+
+const updateEmployeeRole = async (employeeId, roleId) => {
+    const employee = await Employee.findById(employeeId);
+    if (!employee) {
+        throw new Error("Employee not found");
+    }
+    employee.role = roleId;
+    await employee.save();
+    return employee;
+};
+
 module.exports = {
     updateProfile,
     DeleteProfile,
     getEmployeeDetails,
     searchEmployees,
+    updateEmployeeRole,
 };
