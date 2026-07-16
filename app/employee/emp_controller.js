@@ -42,19 +42,17 @@ const getEmployeeDetails = async (req, res) => {
     }
 };
 
-const searchEmployees = async (req, res) => {
+const searchEmployees = async (req, res,next) => {
     try {
         const employees = await employeeService.searchEmployees(req.query);
 
         return res.status(200).json(employees);
     } catch (error) {
-        return res.status(400).json({
-            message: error.message,
-        });
+        next(error)
     }
 };
 
-const updateEmployeeRole = async (req, res) => {
+const updateEmployeeRole = async (req, res,next) => {
     try {
         const { employeeId, roleId } = req.body;
         const employee = await employeeService.updateEmployeeRole(employeeId, roleId);
@@ -64,9 +62,7 @@ const updateEmployeeRole = async (req, res) => {
             employee,
         });
     } catch (error) {
-        return res.status(400).json({
-            message: error.message,
-        });
+        next(error)
     }
 };
 

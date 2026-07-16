@@ -1,18 +1,13 @@
 const leaveService = require("./leave_service");
 const Employee = require("../models/employee_model");
 
-const createLeave = async (req, res) => {
+const createLeave = async (req, res,next) => {
     try {
         const employeeId = req.user.employee_id;
 
         const startDate = new Date(req.body.startDate);
         const endDate = new Date(req.body.endDate);
 
-        if (startDate > endDate) {
-            return res.status(400).json({
-                message: "Start date cannot be after end date",
-            });
-        }
 
         const leaveData = {
             employee: employeeId,
@@ -26,13 +21,11 @@ const createLeave = async (req, res) => {
 
         return res.status(201).json(leave);
     } catch (error) {
-        return res.status(400).json({
-            message: error.message,
-        });
+        next(error)
     }
 };
 
-const cancelLeave = async (req, res) => {
+const cancelLeave = async (req, res,next) => {
     try {
         const leave = await leaveService.cancelLeave(
             req.params.id,
@@ -44,13 +37,11 @@ const cancelLeave = async (req, res) => {
             leave,
         });
     } catch (error) {
-        return res.status(400).json({
-            message: error.message,
-        });
+        next(error)
     }
 };
 
-const leaveStatus = async (req, res) => {
+const leaveStatus = async (req, res,next) => {
     try {
         const manager = await Employee.findById(
             req.user.employee_id
@@ -88,9 +79,7 @@ const leaveStatus = async (req, res) => {
             leave,
         });
     } catch (error) {
-        return res.status(400).json({
-            message: error.message,
-        });
+        next(error)
     }
 };
 
@@ -102,12 +91,10 @@ const leaveBalance = async (req, res) => {
 
         return res.status(200).json(balance);
     } catch (error) {
-        return res.status(400).json({
-            message: error.message,
-        });
+        next(error)
     }
 };
-const leaveHistory = async (req, res) => {
+const leaveHistory = async (req, res,next) => {
     try {
         const history = await leaveService.getLeaveHistory(
             req.user.employee_id
@@ -115,9 +102,7 @@ const leaveHistory = async (req, res) => {
 
         return res.status(200).json(history);
     } catch (error) {
-        return res.status(400).json({
-            message: error.message,
-        });
+        next(error)
     }
 };
 
