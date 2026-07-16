@@ -8,14 +8,18 @@ const updateProfile = async (data) => {
     const employee = await Employee.findById(employeeId);
 
     if (!employee) {
-        throw new Error("Employee not found");
+        const error = new Error("Employee not found");
+        error.statusCode = 404;
+        throw error;
     }
 
     if (email && email !== employee.email) {
         const existingEmployee = await Employee.findOne({ email });
 
         if (existingEmployee) {
-            throw new Error("Email already exists");
+            const error = new Error("Email already exists");
+            error.statusCode = 409;
+            throw error;
         }
 
         employee.email = email;
@@ -37,7 +41,9 @@ const updateProfile = async (data) => {
 const DeleteProfile = async (employeeId) => {
     const employee = await Employee.findByIdAndDelete(employeeId);
     if (!employee) {
-        throw new Error("Employee not found");
+        const error = new Error("Employee not found");
+        error.statusCode = 404;
+        throw error;
     }
     return { message: "Employee profile deleted successfully" };
 }
@@ -45,7 +51,9 @@ const DeleteProfile = async (employeeId) => {
 const getEmployeeDetails = async (employeeId) => {
     const employee = await Employee.findById(employeeId).populate("role").populate("dept");
     if (!employee) {
-        throw new Error("Employee not found");
+        const error = new Error("Employee not found");
+        error.statusCode = 404;
+        throw error;
     }
     return employee;
 }
@@ -62,7 +70,9 @@ const searchEmployees = async (query) => {
     } = query;
 
     if (!name && !email && !phone && !role && !department) {
-        throw new Error("At least one search parameter is required");
+        const error = new Error("At least one search parameter is required");
+        error.statusCode = 400;
+        throw error;
     }
 
     let findQuery = {};
@@ -107,7 +117,9 @@ const searchEmployees = async (query) => {
 const updateEmployeeRole = async (employeeId, roleId) => {
     const employee = await Employee.findById(employeeId);
     if (!employee) {
-        throw new Error("Employee not found");
+        const error = new Error("Employee not found");
+        error.statusCode = 404;
+        throw error;
     }
     employee.role = roleId;
     await employee.save();

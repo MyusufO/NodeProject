@@ -11,7 +11,9 @@ const createLeave = async (leaveData) => {
     });
 
     if (overlap) {
-        throw new Error("Leave overlaps with an existing leave.");
+        const error = new Error("Leave overlaps with an existing leave.");
+        error.statusCode = 409;
+        throw error;
     }
 
     return await Leave.create(leaveData);
@@ -22,23 +24,33 @@ const cancelLeave = async (id, employeeId) => {
     const leave = await Leave.findById(id);
 
     if (!leave) {
-        throw new Error("Leave not found");
+        const error = new Error("Leave not found");
+        error.statusCode = 404;
+        throw error;
     }
 
     if (leave.employee.toString() !== employeeId) {
-        throw new Error("Unauthorized");
+        const error = new Error("Unauthorized");
+        error.statusCode = 403;
+        throw error;
     }
 
     if (leave.status === "Cancelled") {
-        throw new Error("Leave already cancelled");
+        const error = new Error("Leave already cancelled");
+        error.statusCode = 409;
+        throw error;
     }
 
     if (leave.status === "Rejected") {
-        throw new Error("Rejected leave cannot be cancelled");
+        const error = new Error("Rejected leave cannot be cancelled");
+        error.statusCode = 409;
+        throw error;
     }
 
     if (new Date() >= leave.startDate) {
-        throw new Error("Cannot cancel after leave has started");
+        const error = new Error("Cannot cancel after leave has started");
+        error.statusCode = 400;
+        throw error;
     }
 
     if (leave.status === "Approved") {
@@ -69,21 +81,26 @@ const calculateLeaveDays = (startDate, endDate) => {
     );
 };
 
-
 const leaveStatus = async (id, status, managerId, remarks = "") => {
 
     const leave = await Leave.findById(id);
 
     if (!leave) {
-        throw new Error("Leave not found");
+        const error = new Error("Leave not found");
+        error.statusCode = 404;
+        throw error;
     }
 
     if (leave.status !== "Pending") {
-        throw new Error("Leave has already been processed");
+        const error = new Error("Leave has already been processed");
+        error.statusCode = 409;
+        throw error;
     }
 
     if (!["Approved", "Rejected"].includes(status)) {
-        throw new Error("Invalid status");
+        const error = new Error("Invalid status");
+        error.statusCode = 400;
+        throw error;
     }
 
     if (status === "Approved") {
@@ -96,7 +113,9 @@ const leaveStatus = async (id, status, managerId, remarks = "") => {
         );
 
         if (employee.leaveBalance < days) {
-            throw new Error("Insufficient leave balance");
+            const error = new Error("Insufficient leave balance");
+            error.statusCode = 400;
+            throw error;
         }
 
         employee.leaveBalance -= days;
@@ -110,12 +129,15 @@ const leaveStatus = async (id, status, managerId, remarks = "") => {
 
     return await leave.save();
 };
+
 const leaveBalance = async (employeeId) => {
 
     const employee = await Employee.findById(employeeId);
 
     if (!employee) {
-        throw new Error("Employee not found");
+        const error = new Error("Employee not found");
+        error.statusCode = 404;
+        throw error;
     }
 
     return {

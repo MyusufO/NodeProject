@@ -6,7 +6,7 @@ const {
   createDepartment,
   updateDepartment,
   deleteDepartment,
-  UpdateEmployeeDepartment
+  updateEmployeeDepartment
 } = require('./dept_controller');
 const authenticateJWT = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorise");
@@ -49,6 +49,6 @@ router.put(
   authenticateJWT,
   authorize("Admin"),
   validateSchema(updateEmployeeDepartmentSchema),
-  UpdateEmployeeDepartment
+  updateEmployeeDepartment
 );
 module.exports = router;

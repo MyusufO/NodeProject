@@ -1,6 +1,6 @@
 const employeeService = require("./emp_services");
 
-const updateProfile = async (req, res) => {
+const updateProfile = async (req, res,next) => {
     try {
         const employee = await employeeService.updateProfile(req.body);
 
@@ -9,26 +9,21 @@ const updateProfile = async (req, res) => {
             employee,
         });
     } catch (error) {
-        return res.status(400).json({
-            message: error.message,
-            Sample: req.body,
-        });
+        next(error)
     }
 };
 
-const deleteProfile = async (req, res) => {
+const deleteProfile = async (req, res,next) => {
     try {
         const result = await employeeService.DeleteProfile(req.params.employeeId);
 
         return res.status(200).json(result);
     } catch (error) {
-        return res.status(404).json({
-            message: error.message,
-        });
+        next(error)
     }
 };
 
-const getEmployeeDetails = async (req, res) => {
+const getEmployeeDetails = async (req, res,next) => {
     try {
         const employee = await employeeService.getEmployeeDetails(
             req.params.employeeId
@@ -36,9 +31,7 @@ const getEmployeeDetails = async (req, res) => {
 
         return res.status(200).json(employee);
     } catch (error) {
-        return res.status(404).json({
-            message: error.message,
-        });
+        next(error)
     }
 };
 

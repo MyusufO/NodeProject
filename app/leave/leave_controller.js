@@ -41,7 +41,7 @@ const cancelLeave = async (req, res,next) => {
     }
 };
 
-const leaveStatus = async (req, res,next) => {
+const leaveStatus = async (req, res) => {
     try {
         const manager = await Employee.findById(
             req.user.employee_id
@@ -83,7 +83,7 @@ const leaveStatus = async (req, res,next) => {
     }
 };
 
-const leaveBalance = async (req, res) => {
+const leaveBalance = async (req, res,next) => {
     try {
         const balance = await leaveService.leaveBalance(
             req.user.employee_id
