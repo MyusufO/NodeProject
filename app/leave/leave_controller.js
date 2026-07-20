@@ -41,7 +41,7 @@ const cancelLeave = async (req, res,next) => {
     }
 };
 
-const leaveStatus = async (req, res) => {
+const leaveStatus = async (req, res,next) => {
     try {
         const manager = await Employee.findById(
             req.user.employee_id

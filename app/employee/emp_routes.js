@@ -3,6 +3,7 @@ const router = express.Router();
 
 const authorize = require("../middleware/authorise");
 const validateSchema = require("../middleware/validateSchema");
+const upload = require("../middleware/filehandling"); // adjust path if needed
 
 const {
   updateProfileSchema,

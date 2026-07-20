@@ -59,10 +59,21 @@ const updateEmployeeRole = async (req, res,next) => {
     }
 };
 
+const addEmployees = async (req, res,next) => {
+    try {
+        const result = await employeeService.bulkAddEmployees(req.body.employees);
+
+        return res.status(201).json(result);
+    } catch (error) {
+        next(error)
+    }
+};
+
 module.exports = {
     updateProfile,
     deleteProfile,
     getEmployeeDetails,
     searchEmployees,
     updateEmployeeRole,
+    addEmployees,
 };
