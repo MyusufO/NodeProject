@@ -128,6 +128,49 @@ const updateEmployeeRole = async (employeeId, roleId) => {
     return employee;
 };
 
+const addSingleEmployee = async (data) => {
+    const { name, email, phone, password, dept } = data;
+
+    const employeeRole = await Role.findOne({ roleName: "Employee" });
+
+    if (!employeeRole) {
+        const error = new Error("Default Employee role not found");
+        error.statusCode = 500;
+        throw error;
+    }
+
+    const duplicateQuery = phone
+        ? { $or: [{ email }, { phone }] }
+        : { email };
+
+    const existingEmployee = await Employee.findOne(duplicateQuery);
+
+    if (existingEmployee) {
+        const error = new Error("Employee already exists");
+        error.statusCode = 409;
+        throw error;
+    }
+
+    const password_hash = await bcrypt.hash(password, 10);
+
+    const employee = await Employee.create({
+        name,
+        email,
+        phone,
+        password_hash,
+        dept: dept || null,
+        role: employeeRole._id,
+    });
+
+    return {
+        message: "Employee added successfully",
+        employee: {
+            id: employee._id,
+            name: employee.name,
+            email: employee.email,
+        },
+    };
+};
 
 const bulkAddEmployees = async (employees) => {
     const employeeRole = await Role.findOne({ roleName: "Employee" });
@@ -186,5 +229,6 @@ module.exports = {
     getEmployeeDetails,
     searchEmployees,
     updateEmployeeRole,
-    bulkAddEmployees
+    addSingleEmployee,
+    bulkAddEmployees,
 };

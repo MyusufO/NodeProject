@@ -1,0 +1,16 @@
+{
+  "employees": [
+    {
+      "name": "John Doe",
+      "email": "john@example.com",
+      "phone": "9876543210",
+      "password": "Password123"
+    },
+    {
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "9876543211",
+      "password": "Password123"
+    }
+  ]
+}

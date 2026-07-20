@@ -58,6 +58,12 @@ const bulkAddEmployeeSchema = Joi.object({
   employees: Joi.array().items(newEmployeeSchema).min(1).required(),
 });
 
+// Accepts either a single employee body OR { employees: [...] } from a JSON file upload
+const addEmployeeSchema = Joi.alternatives().try(
+  bulkAddEmployeeSchema,
+  newEmployeeSchema
+);
+
 module.exports = {
   updateProfileSchema,
   employeeIdSchema,
@@ -65,4 +71,5 @@ module.exports = {
   updateEmployeeRoleSchema,
   newEmployeeSchema,
   bulkAddEmployeeSchema,
+  addEmployeeSchema,
 };

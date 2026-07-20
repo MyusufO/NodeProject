@@ -3,11 +3,13 @@ const Joi = require("joi");
 const objectId = Joi.string().hex().length(24);
 
 const createDepartmentSchema = Joi.object({
-  name: Joi.string()
+  departmentName: Joi.string()
     .trim()
     .min(2)
     .max(100)
     .required(),
+  
+  departmentCode: Joi.string().required(),
 
   description: Joi.string()
     .trim()

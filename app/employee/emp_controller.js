@@ -59,10 +59,14 @@ const updateEmployeeRole = async (req, res,next) => {
     }
 };
 
-const addEmployees = async (req, res,next) => {
+const addEmployee = async (req, res,next) => {
     try {
-        const result = await employeeService.bulkAddEmployees(req.body.employees);
+        if (Array.isArray(req.body.employees)) {
+            const result = await employeeService.bulkAddEmployees(req.body.employees);
+            return res.status(201).json(result);
+        }
 
+        const result = await employeeService.addSingleEmployee(req.body);
         return res.status(201).json(result);
     } catch (error) {
         next(error)
@@ -75,5 +79,5 @@ module.exports = {
     getEmployeeDetails,
     searchEmployees,
     updateEmployeeRole,
-    addEmployees,
+    addEmployee,
 };

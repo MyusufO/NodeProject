@@ -1,0 +1,665 @@
+{
+  "info": {
+    "_postman_id": "caacce92-c548-4f2b-b9aa-421166eee290",
+    "name": "NodeProject - HR Employee & Leave Management API",
+    "description": "Postman collection covering Auth, Employees (single + bulk JSON-file add), Departments, and Leaves endpoints.\n\nWorkflow:\n1. Run 'Register' (optional, creates a plain Employee) or use an existing Admin account.\n2. Run 'Login' — this auto-saves {{token}} and {{employeeId}} as collection variables.\n3. All other requests inherit the Bearer token automatically.\n4. Admin-only requests (add employee, delete employee, update role, create/update/delete department, update employee department) need an account whose role is 'Admin' in the DB.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "employeeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "departmentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "leaveId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Users/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Users"
+              ]
+            },
+            "description": "Simple check that the Users route is mounted and responding.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Users/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Users",
+                "register"
+              ]
+            },
+            "description": "Creates a new Employee with the default 'Employee' role. To test Admin-only routes, promote this account's role directly in the DB, or seed an Admin account.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"Password123\",\n  \"phone\": \"9876543210\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Users",
+                "login"
+              ]
+            },
+            "description": "Logs in and saves the returned JWT + employee id into collection variables ({{token}}, {{employeeId}}) so every other request in this collection can reuse them automatically.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"Password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "    pm.collectionVariables.set(\"token\", res.token);",
+                  "}",
+                  "if (res.employee && res.employee.id) {",
+                  "    pm.collectionVariables.set(\"employeeId\", res.employee.id);",
+                  "}",
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Employees",
+      "item": [
+        {
+          "name": "Add Employee (Single)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees"
+              ]
+            },
+            "description": "Admin only. Sends a normal JSON body -> creates one employee with the default Employee role.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Smith\",\n  \"email\": \"john.smith@example.com\",\n  \"phone\": \"9123456780\",\n  \"password\": \"Password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Employees (Bulk via JSON File)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/employees/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees"
+              ]
+            },
+            "description": "Admin only. Upload a .json file under the 'file' field containing an array of employees -> bulk-adds them, skipping any duplicates. Select the file manually in the Body > form-data tab before sending.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Attach a .json file whose content is an array of employee objects, e.g. [{ \"name\": \"...\", \"email\": \"...\", \"password\": \"...\" }, ...]"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees"
+              ]
+            },
+            "description": "Updates the logged-in / specified employee's profile. Requires employeeId + at least one field to change.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"name\": \"Jane D. Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"phone\": \"9876543211\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Employee Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/employees/{{employeeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees",
+                "{{employeeId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Search Employees",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/employees/search/filter?name=John",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees",
+                "search",
+                "filter"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "John"
+                }
+              ]
+            },
+            "description": "At least one query param (name, email, phone, role, department) is required."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Employee Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees",
+                "role"
+              ]
+            },
+            "description": "Admin only. roleId must be a valid Role document's _id (Admin/Manager/Employee).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"roleId\": \"REPLACE_WITH_ROLE_ID\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Employee",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/employees/{{employeeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees",
+                "{{employeeId}}"
+              ]
+            },
+            "description": "Admin only."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "Get All Departments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Departments/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Departments"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Create Department",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Departments/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Departments"
+              ]
+            },
+            "description": "Admin only.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Engineering\",\n  \"description\": \"Handles product development\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Department By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Departments/{{departmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Departments",
+                "{{departmentId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update Department",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Departments/{{departmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Departments",
+                "{{departmentId}}"
+              ]
+            },
+            "description": "Admin only.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Engineering & R&D\",\n  \"description\": \"Handles product development and research\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Employee Department",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Departments/employees/{{employeeId}}/departments/{{departmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Departments",
+                "employees",
+                "{{employeeId}}",
+                "departments",
+                "{{departmentId}}"
+              ]
+            },
+            "description": "Admin only. Note: the service reads employeeId/newDepartmentId from the body, not the URL params, so both must be included.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"newDepartmentId\": \"{{departmentId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Department",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Departments/{{departmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Departments",
+                "{{departmentId}}"
+              ]
+            },
+            "description": "Admin only."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Leaves",
+      "item": [
+        {
+          "name": "Apply Leave",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Leaves/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Leaves"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-05\",\n  \"reason\": \"Family vacation\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res._id) {",
+                  "    pm.collectionVariables.set(\"leaveId\", res._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Leave Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Leaves/{{employeeId}}/balance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Leaves",
+                "{{employeeId}}",
+                "balance"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Leave History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Leaves/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Leaves",
+                "history"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Approve/Reject Leave",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Leaves/{{leaveId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Leaves",
+                "{{leaveId}}",
+                "status"
+              ]
+            },
+            "description": "Manager only. The logged-in user must have role 'Manager'.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\",\n  \"remarks\": \"Approved by manager\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Leave",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Leaves/{{leaveId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Leaves",
+                "{{leaveId}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
