@@ -38,9 +38,31 @@ const updateEmployeeRoleSchema = Joi.object({
   roleId: objectId.required(),
 });
 
+const newEmployeeSchema = Joi.object({
+  name: Joi.string().trim().min(2).max(100).required(),
+
+  email: Joi.string().email().required(),
+
+  phone: Joi.string()
+    .pattern(/^[0-9]{10}$/)
+    .messages({
+      "string.pattern.base": "Phone number must contain exactly 10 digits",
+    }),
+
+  password: Joi.string().min(6).required(),
+
+  dept: objectId,
+});
+
+const bulkAddEmployeeSchema = Joi.object({
+  employees: Joi.array().items(newEmployeeSchema).min(1).required(),
+});
+
 module.exports = {
   updateProfileSchema,
   employeeIdSchema,
   searchEmployeeSchema,
   updateEmployeeRoleSchema,
+  newEmployeeSchema,
+  bulkAddEmployeeSchema,
 };

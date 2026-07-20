@@ -1,25 +1,37 @@
 const express = require("express");
 const router = express.Router();
-
+ 
 const authorize = require("../middleware/authorise");
 const validateSchema = require("../middleware/validateSchema");
-const upload = require("../middleware/filehandling"); // adjust path if needed
-
+const upload = require("../middleware/filehandling");
+const jsonFileHandler = require("../middleware/jsonFileHandler");
+ 
 const {
   updateProfileSchema,
   employeeIdSchema,
   searchEmployeeSchema,
   updateEmployeeRoleSchema,
+  bulkAddEmployeeSchema,
 } = require("../../validation/employeeValidation");
-
+ 
 const {
   updateProfile,
   deleteProfile,
   getEmployeeDetails,
   searchEmployees,
   updateEmployeeRole,
+  addEmployees,
 } = require("./emp_controller");
-
+ 
+// Bulk add employees via JSON file upload (Admin only)
+router.post(
+  "/bulk",
+  authorize("Admin"),
+  upload.single("file"),
+  jsonFileHandler({ key: "employees" }),
+  validateSchema(bulkAddEmployeeSchema),
+  addEmployees
+);
 // Update profile
 router.put(
   "/",

@@ -1,5 +1,7 @@
 const Employee = require("../models/employee_model");
 const getPagination=require("../middleware/pagination")
+const Role = require("../models/role_model");
+const bcrypt = require("bcrypt");
 
 
 const updateProfile = async (data) => {
