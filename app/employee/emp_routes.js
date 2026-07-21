@@ -4,6 +4,7 @@ const router = express.Router();
 const authorize = require("../middleware/authorise");
 const validateSchema = require("../middleware/validateSchema");
 const upload = require("../middleware/filehandling");
+const uploadProfilePicture = require("../middleware/imageUpload");
 const jsonFileHandler = require("../middleware/jsonFileHandler");
 
 const {
@@ -17,12 +18,12 @@ const {
 const {
   updateProfile,
   deleteProfile,
+  deleteProfilePicture,
   getEmployeeDetails,
   searchEmployees,
   updateEmployeeRole,
   addEmployee,
 } = require("./emp_controller");
-
 
 router.post(
   "/",
@@ -33,12 +34,16 @@ router.post(
   addEmployee
 );
 
-// Update profile
+// Update profile (name/email/phone, optionally an avatar in the same request)
 router.put(
   "/",
+  uploadProfilePicture.single("avatar"),
   validateSchema(updateProfileSchema),
   updateProfile
 );
+
+// Remove profile picture only
+router.delete("/profile-picture", deleteProfilePicture);
 
 // Delete employee (Admin only)
 router.delete(

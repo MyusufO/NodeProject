@@ -1,0 +1,522 @@
+{
+  "info": {
+    "name": "NodeProject - Users",
+    "description": "Simple collection for the Users (auth) endpoints - register & login, with sample payloads and expected responses for different scenarios.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "employeeId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Register",
+          "item": [
+            {
+              "name": "Register - Success",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"9876543210\",\n  \"password\": \"Password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/Users/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Users",
+                    "register"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "201 Created - Employee registered successfully",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"9876543210\",\n  \"password\": \"Password123\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/Users/register",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Users",
+                        "register"
+                      ]
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Employee registered successfully\",\n  \"employee\": {\n    \"id\": \"665f1c2e4b3a2a0012ab34cd\",\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"role\": \"665f1c2e4b3a2a0012ab34aa\"\n  }\n}"
+                }
+              ],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Auto-save the new employee's id so other collections (Employees/Departments/Leaves) can reuse it",
+                      "if (pm.response.code === 201) {",
+                      "    const data = pm.response.json();",
+                      "    if (data.employee && data.employee.id) {",
+                      "        pm.environment.set(\"employeeId\", data.employee.id);",
+                      "        console.log(\"Saved employeeId:\", data.employee.id);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Register - Duplicate Email",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"9123456789\",\n  \"password\": \"Password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/Users/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Users",
+                    "register"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "409 Conflict - Employee already exists",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"9123456789\",\n  \"password\": \"Password123\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/Users/register",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Users",
+                        "register"
+                      ]
+                    }
+                  },
+                  "status": "Conflict",
+                  "code": 409,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 409,\n  \"message\": \"Employee already exists\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Register - Duplicate Phone",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Jane Roe\",\n  \"email\": \"jane.roe@example.com\",\n  \"phone\": \"9876543210\",\n  \"password\": \"Password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/Users/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Users",
+                    "register"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "409 Conflict - Phone number already exists",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"Jane Roe\",\n  \"email\": \"jane.roe@example.com\",\n  \"phone\": \"9876543210\",\n  \"password\": \"Password123\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/Users/register",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Users",
+                        "register"
+                      ]
+                    }
+                  },
+                  "status": "Conflict",
+                  "code": 409,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 409,\n  \"message\": \"Phone number already exists\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Register - Validation Error (missing/invalid fields)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"J\",\n  \"email\": \"not-an-email\",\n  \"phone\": \"12345\",\n  \"password\": \"short\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/Users/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Users",
+                    "register"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "400 Bad Request - Validation failed",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"J\",\n  \"email\": \"not-an-email\",\n  \"phone\": \"12345\",\n  \"password\": \"short\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/Users/register",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Users",
+                        "register"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Validation failed\",\n  \"errors\": [\n    \"name length must be at least 2 characters long\",\n    \"email must be a valid email\",\n    \"phone number must be a valid 10-digit Indian mobile number\",\n    \"password length must be at least 8 characters long\"\n  ]\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "item": [
+            {
+              "name": "Login - Success",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/Users/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Users",
+                    "login"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK - Login successful",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password123\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/Users/login",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Users",
+                        "login"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Login successful\",\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"employee\": {\n    \"id\": \"665f1c2e4b3a2a0012ab34cd\",\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"role\": \"Employee\"\n  }\n}"
+                }
+              ],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Auto-save the JWT and employee id so the other collections can reuse them",
+                      "if (pm.response.code === 200) {",
+                      "    const data = pm.response.json();",
+                      "    if (data.token) {",
+                      "        pm.environment.set(\"token\", data.token);",
+                      "        console.log(\"Saved token\");",
+                      "    }",
+                      "    if (data.employee && data.employee.id) {",
+                      "        pm.environment.set(\"employeeId\", data.employee.id);",
+                      "        console.log(\"Saved employeeId:\", data.employee.id);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Login - Invalid Credentials",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"WrongPassword\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/Users/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Users",
+                    "login"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "401 Unauthorized - Invalid email or password",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"WrongPassword\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/Users/login",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Users",
+                        "login"
+                      ]
+                    }
+                  },
+                  "status": "Unauthorized",
+                  "code": 401,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 401,\n  \"message\": \"Invalid email or password\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Login - Validation Error (missing fields)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"\",\n  \"password\": \"\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/Users/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Users",
+                    "login"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "400 Bad Request - Validation failed",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"email\": \"\",\n  \"password\": \"\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/Users/login",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Users",
+                        "login"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Validation failed\",\n  \"errors\": [\n    \"email is not allowed to be empty\",\n    \"password is not allowed to be empty\"\n  ]\n}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

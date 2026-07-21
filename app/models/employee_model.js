@@ -43,6 +43,10 @@ const employeeSchema = new mongoose.Schema(
       default: 10,
       min: 0,
     },
+    profilePicture: {
+      type: String, 
+      default: null,
+  },
   },
   {
     timestamps: true,

@@ -1,0 +1,1264 @@
+{
+  "info": {
+    "name": "NodeProject - Employees",
+    "description": "Employee endpoints. Run folders in numeric order (1-6): Add Employee first (auto-saves {{employeeId}}), then the rest reuse that id automatically, ending with Delete. Requires {{token}} (from the Users collection's Login request). {{roleId}} for step 5 can't be fetched via any API in this project (there's no 'list roles' endpoint) - open your roles collection in MongoDB and copy the _id of the role you want (Admin/Manager/Employee) into the environment variable manually. All routes require a Bearer token; Add/Delete/Update Role require an Admin role token.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "employeeId",
+      "value": ""
+    },
+    {
+      "key": "roleId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Employees",
+      "item": [
+        {
+          "name": "1. Add Employee",
+          "item": [
+            {
+              "name": "1. Add Employee - Success (Admin, single)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Alice Smith\",\n  \"email\": \"alice.smith@example.com\",\n  \"phone\": \"9876500001\",\n  \"password\": \"Password123\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "201 Created",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"Alice Smith\",\n  \"email\": \"alice.smith@example.com\",\n  \"phone\": \"9876500001\",\n  \"password\": \"Password123\"\n}"
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Employee added successfully\",\n  \"employee\": {\n    \"id\": \"<mongo id - captured automatically>\",\n    \"name\": \"Alice Smith\",\n    \"email\": \"alice.smith@example.com\"\n  }\n}"
+                }
+              ],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Auto-save the new employee's id for the requests below",
+                      "if (pm.response.code === 201) {",
+                      "    const data = pm.response.json();",
+                      "    if (data.employee && data.employee.id) {",
+                      "        pm.environment.set(\"employeeId\", data.employee.id);",
+                      "        console.log(\"Saved employeeId:\", data.employee.id);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Add Employees - Success (Admin, bulk)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employees\": [\n    {\n      \"name\": \"Bob Lee\",\n      \"email\": \"bob.lee@example.com\",\n      \"phone\": \"9876500002\",\n      \"password\": \"Password123\"\n    },\n    {\n      \"name\": \"Carla Ray\",\n      \"email\": \"carla.ray@example.com\",\n      \"phone\": \"9876500003\",\n      \"password\": \"Password123\"\n    }\n  ]\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "201 Created",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"employees\": [\n    {\n      \"name\": \"Bob Lee\",\n      \"email\": \"bob.lee@example.com\",\n      \"phone\": \"9876500002\",\n      \"password\": \"Password123\"\n    },\n    {\n      \"name\": \"Carla Ray\",\n      \"email\": \"carla.ray@example.com\",\n      \"phone\": \"9876500003\",\n      \"password\": \"Password123\"\n    }\n  ]\n}"
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"2 employee(s) added, 0 skipped\",\n  \"created\": [\n    {\n      \"id\": \"665f1c2e4b3a2a0012ab3502\",\n      \"name\": \"Bob Lee\",\n      \"email\": \"bob.lee@example.com\"\n    },\n    {\n      \"id\": \"665f1c2e4b3a2a0012ab3503\",\n      \"name\": \"Carla Ray\",\n      \"email\": \"carla.ray@example.com\"\n    }\n  ],\n  \"skipped\": []\n}"
+                }
+              ]
+            },
+            {
+              "name": "Add Employee - Duplicate (Employee already exists)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Alice Smith\",\n  \"email\": \"alice.smith@example.com\",\n  \"phone\": \"9876500001\",\n  \"password\": \"Password123\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "409 Conflict",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"Alice Smith\",\n  \"email\": \"alice.smith@example.com\",\n  \"phone\": \"9876500001\",\n  \"password\": \"Password123\"\n}"
+                    }
+                  },
+                  "status": "Conflict",
+                  "code": 409,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 409,\n  \"message\": \"Employee already exists\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Add Employee - Validation Error",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"A\",\n  \"email\": \"not-an-email\",\n  \"password\": \"123\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "400 Bad Request",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"A\",\n  \"email\": \"not-an-email\",\n  \"password\": \"123\"\n}"
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Validation failed\",\n  \"errors\": [\n    \"name length must be at least 2 characters long\",\n    \"email must be a valid email\",\n    \"password length must be at least 6 characters long\"\n  ]\n}"
+                }
+              ]
+            },
+            {
+              "name": "Add Employee - Access Denied (Non-Admin)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Alice Smith\",\n  \"email\": \"alice.smith@example.com\",\n  \"phone\": \"9876500001\",\n  \"password\": \"Password123\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "403 Forbidden",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"Alice Smith\",\n  \"email\": \"alice.smith@example.com\",\n  \"phone\": \"9876500001\",\n  \"password\": \"Password123\"\n}"
+                    }
+                  },
+                  "status": "Forbidden",
+                  "code": 403,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Access denied\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "2. Get Employee Details",
+          "item": [
+            {
+              "name": "2. Get Employee Details - Success (uses employeeId from step 1)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees/{{employeeId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees",
+                    "{{employeeId}}"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees/{{employeeId}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees",
+                        "{{employeeId}}"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"_id\": \"{{employeeId}}\",\n  \"name\": \"Alice Smith\",\n  \"email\": \"alice.smith@example.com\",\n  \"phone\": \"9876500001\",\n  \"role\": {\n    \"_id\": \"665f1c2e4b3a2a0012ab34aa\",\n    \"roleName\": \"Employee\"\n  },\n  \"dept\": null\n}"
+                }
+              ]
+            },
+            {
+              "name": "Get Employee Details - Not Found",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees/000000000000000000000000",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees",
+                    "000000000000000000000000"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "404 Not Found",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees/000000000000000000000000",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees",
+                        "000000000000000000000000"
+                      ]
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 404,\n  \"message\": \"Employee not found\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "3. Update Profile",
+          "item": [
+            {
+              "name": "3. Update Profile - Success (uses employeeId from step 1)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"name\": \"Alice R. Smith\",\n  \"phone\": \"9876500009\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"name\": \"Alice R. Smith\",\n  \"phone\": \"9876500009\"\n}"
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Profile updated successfully\",\n  \"employee\": {\n    \"_id\": \"{{employeeId}}\",\n    \"name\": \"Alice R. Smith\",\n    \"email\": \"alice.smith@example.com\",\n    \"phone\": \"9876500009\"\n  }\n}"
+                }
+              ]
+            },
+            {
+              "name": "Update Profile - Email Already Exists",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"email\": \"taken@example.com\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "409 Conflict",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"email\": \"taken@example.com\"\n}"
+                    }
+                  },
+                  "status": "Conflict",
+                  "code": 409,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 409,\n  \"message\": \"Email already exists\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Update Profile - Employee Not Found",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employeeId\": \"000000000000000000000000\",\n  \"name\": \"Ghost\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "404 Not Found",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"employeeId\": \"000000000000000000000000\",\n  \"name\": \"Ghost\"\n}"
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 404,\n  \"message\": \"Employee not found\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "4. Search Employees",
+          "item": [
+            {
+              "name": "4. Search Employees - Success",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees/search/filter?name=Alice",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees",
+                    "search",
+                    "filter"
+                  ],
+                  "query": [
+                    {
+                      "key": "name",
+                      "value": "Alice"
+                    }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees/search/filter?name=Alice",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees",
+                        "search",
+                        "filter"
+                      ],
+                      "query": [
+                        {
+                          "key": "name",
+                          "value": "Alice"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"currentPage\": 1,\n  \"totalPages\": 1,\n  \"totalEmployees\": 1,\n  \"employees\": [\n    {\n      \"_id\": \"{{employeeId}}\",\n      \"name\": \"Alice R. Smith\",\n      \"email\": \"alice.smith@example.com\",\n      \"phone\": \"9876500009\"\n    }\n  ]\n}"
+                }
+              ]
+            },
+            {
+              "name": "Search Employees - No Search Parameter Provided",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees/search/filter",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees",
+                    "search",
+                    "filter"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "400 Bad Request",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees/search/filter",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees",
+                        "search",
+                        "filter"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 400,\n  \"message\": \"At least one search parameter is required\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "5. Update Employee Role",
+          "item": [
+            {
+              "name": "5. Update Employee Role - Success (Admin, uses employeeId from step 1 + {{roleId}})",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees/role",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees",
+                    "role"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"roleId\": \"{{roleId}}\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees/role",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees",
+                        "role"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"roleId\": \"{{roleId}}\"\n}"
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Employee role updated successfully\",\n  \"employee\": {\n    \"_id\": \"{{employeeId}}\",\n    \"name\": \"Alice R. Smith\",\n    \"email\": \"alice.smith@example.com\",\n    \"role\": \"{{roleId}}\"\n  }\n}"
+                }
+              ]
+            },
+            {
+              "name": "Update Employee Role - Employee Not Found",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees/role",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees",
+                    "role"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employeeId\": \"000000000000000000000000\",\n  \"roleId\": \"{{roleId}}\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "404 Not Found",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees/role",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees",
+                        "role"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"employeeId\": \"000000000000000000000000\",\n  \"roleId\": \"{{roleId}}\"\n}"
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 404,\n  \"message\": \"Employee not found\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Update Employee Role - Access Denied (Non-Admin)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees/role",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees",
+                    "role"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"roleId\": \"{{roleId}}\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "403 Forbidden",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees/role",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees",
+                        "role"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"roleId\": \"{{roleId}}\"\n}"
+                    }
+                  },
+                  "status": "Forbidden",
+                  "code": 403,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Access denied\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "6. Delete Employee (run last)",
+          "item": [
+            {
+              "name": "6. Delete Employee - Success (Admin, uses employeeId from step 1, run LAST)",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees/{{employeeId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees",
+                    "{{employeeId}}"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK",
+                  "originalRequest": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees/{{employeeId}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees",
+                        "{{employeeId}}"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Employee profile deleted successfully\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Delete Employee - Not Found",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees/000000000000000000000000",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees",
+                    "000000000000000000000000"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "404 Not Found",
+                  "originalRequest": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees/000000000000000000000000",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees",
+                        "000000000000000000000000"
+                      ]
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 404,\n  \"message\": \"Employee not found\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Delete Employee - Access Denied (Non-Admin)",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/employees/{{employeeId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "employees",
+                    "{{employeeId}}"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "403 Forbidden",
+                  "originalRequest": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/employees/{{employeeId}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "employees",
+                        "{{employeeId}}"
+                      ]
+                    }
+                  },
+                  "status": "Forbidden",
+                  "code": 403,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Access denied\"\n}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

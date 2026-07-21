@@ -1,0 +1,1066 @@
+{
+  "info": {
+    "name": "NodeProject - Departments",
+    "description": "Department endpoints. Run folders in numeric order (1-6): Create Department first (auto-saves {{departmentId}}), then the rest reuse that id automatically, ending with Delete. Requires {{token}} (get it from the Users collection's Login request) and {{employeeId}} (from Users Register/Login) for step 5. All routes require a Bearer token; Create/Update/Delete require an Admin role token.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "departmentId",
+      "value": ""
+    },
+    {
+      "key": "employeeId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "1. Create Department",
+          "item": [
+            {
+              "name": "1. Create Department - Success (Admin)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"departmentName\": \"Engineering\",\n  \"departmentCode\": \"ENG\",\n  \"description\": \"Handles product engineering\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "201 Created",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"departmentName\": \"Engineering\",\n  \"departmentCode\": \"ENG\",\n  \"description\": \"Handles product engineering\"\n}"
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"_id\": \"<mongo id - captured automatically>\",\n  \"departmentName\": \"Engineering\",\n  \"departmentCode\": \"ENG\",\n  \"description\": \"Handles product engineering\",\n  \"__v\": 0\n}"
+                }
+              ],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Auto-save the created department's id for the requests below",
+                      "if (pm.response.code === 201) {",
+                      "    const data = pm.response.json();",
+                      "    if (data._id) {",
+                      "        pm.environment.set(\"departmentId\", data._id);",
+                      "        console.log(\"Saved departmentId:\", data._id);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create Department - Validation Error",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"departmentName\": \"E\",\n  \"description\": \"Missing department code\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "400 Bad Request",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"departmentName\": \"E\",\n  \"description\": \"Missing department code\"\n}"
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Validation failed\",\n  \"errors\": [\n    \"departmentName length must be at least 2 characters long\",\n    \"departmentCode is required\"\n  ]\n}"
+                }
+              ]
+            },
+            {
+              "name": "Create Department - Access Denied (Non-Admin)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"departmentName\": \"Engineering\",\n  \"departmentCode\": \"ENG\",\n  \"description\": \"Handles product engineering\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "403 Forbidden",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"departmentName\": \"Engineering\",\n  \"departmentCode\": \"ENG\",\n  \"description\": \"Handles product engineering\"\n}"
+                    }
+                  },
+                  "status": "Forbidden",
+                  "code": 403,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Access denied\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "2. Get Department By Id",
+          "item": [
+            {
+              "name": "2. Get Department By Id - Success (uses departmentId from step 1)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments/{{departmentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments",
+                    "{{departmentId}}"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments/{{departmentId}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments",
+                        "{{departmentId}}"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"_id\": \"{{departmentId}}\",\n  \"departmentName\": \"Engineering\",\n  \"departmentCode\": \"ENG\",\n  \"description\": \"Handles product engineering\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Get Department By Id - Invalid Id Format",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments/123",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments",
+                    "123"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "400 Bad Request",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments/123",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments",
+                        "123"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Validation failed\",\n  \"errors\": [\n    \"id length must be 24 characters long\"\n  ]\n}"
+                }
+              ]
+            },
+            {
+              "name": "Get Department By Id - Not Found",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments/000000000000000000000000",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments",
+                    "000000000000000000000000"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "404 Not Found",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments/000000000000000000000000",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments",
+                        "000000000000000000000000"
+                      ]
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 404,\n  \"message\": \"Department not found\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "3. Update Department",
+          "item": [
+            {
+              "name": "3. Update Department - Success (uses departmentId from step 1)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments/{{departmentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments",
+                    "{{departmentId}}"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Engineering & R&D\",\n  \"description\": \"Handles product engineering and R&D\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments/{{departmentId}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments",
+                        "{{departmentId}}"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"Engineering & R&D\",\n  \"description\": \"Handles product engineering and R&D\"\n}"
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"_id\": \"{{departmentId}}\",\n  \"departmentName\": \"Engineering\",\n  \"departmentCode\": \"ENG\",\n  \"description\": \"Handles product engineering and R&D\",\n  \"__v\": 0\n}"
+                }
+              ]
+            },
+            {
+              "name": "Update Department - Not Found",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments/000000000000000000000000",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments",
+                    "000000000000000000000000"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Engineering & R&D\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "404 Not Found",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments/000000000000000000000000",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments",
+                        "000000000000000000000000"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"Engineering & R&D\"\n}"
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 404,\n  \"message\": \"Department not found\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "4. Get All Departments",
+          "item": [
+            {
+              "name": "4. Get All Departments - Success",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments?page=1&limit=10",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments?page=1&limit=10",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments"
+                      ],
+                      "query": [
+                        {
+                          "key": "page",
+                          "value": "1"
+                        },
+                        {
+                          "key": "limit",
+                          "value": "10"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"currentPage\": 1,\n  \"totalPages\": 1,\n  \"totalDepartments\": 1,\n  \"departments\": [\n    {\n      \"_id\": \"{{departmentId}}\",\n      \"departmentName\": \"Engineering\",\n      \"departmentCode\": \"ENG\",\n      \"description\": \"Handles product engineering and R&D\"\n    }\n  ]\n}"
+                }
+              ]
+            },
+            {
+              "name": "Get All Departments - Missing Auth Token",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "401 Unauthorized",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments"
+                      ]
+                    }
+                  },
+                  "status": "Unauthorized",
+                  "code": 401,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Authorization header missing\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "5. Update Employee's Department",
+          "item": [
+            {
+              "name": "5. Update Employee's Department - Success (uses employeeId + departmentId)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments/employees/{{employeeId}}/departments/{{departmentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments",
+                    "employees",
+                    "{{employeeId}}",
+                    "departments",
+                    "{{departmentId}}"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"newDepartmentId\": \"{{departmentId}}\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments/employees/{{employeeId}}/departments/{{departmentId}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments",
+                        "employees",
+                        "{{employeeId}}",
+                        "departments",
+                        "{{departmentId}}"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"newDepartmentId\": \"{{departmentId}}\"\n}"
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Employee department updated successfully\",\n  \"employee\": {\n    \"_id\": \"{{employeeId}}\",\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"department\": \"{{departmentId}}\"\n  }\n}"
+                }
+              ]
+            },
+            {
+              "name": "Update Employee's Department - Employee Not Found",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments/employees/000000000000000000000000/departments/{{departmentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments",
+                    "employees",
+                    "000000000000000000000000",
+                    "departments",
+                    "{{departmentId}}"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employeeId\": \"000000000000000000000000\",\n  \"newDepartmentId\": \"{{departmentId}}\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "404 Not Found",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments/employees/000000000000000000000000/departments/{{departmentId}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments",
+                        "employees",
+                        "000000000000000000000000",
+                        "departments",
+                        "{{departmentId}}"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"employeeId\": \"000000000000000000000000\",\n  \"newDepartmentId\": \"{{departmentId}}\"\n}"
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 404,\n  \"message\": \"Employee not found\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Update Employee's Department - Department Not Found",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments/employees/{{employeeId}}/departments/000000000000000000000000",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments",
+                    "employees",
+                    "{{employeeId}}",
+                    "departments",
+                    "000000000000000000000000"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"newDepartmentId\": \"000000000000000000000000\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "404 Not Found",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments/employees/{{employeeId}}/departments/000000000000000000000000",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments",
+                        "employees",
+                        "{{employeeId}}",
+                        "departments",
+                        "000000000000000000000000"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"newDepartmentId\": \"000000000000000000000000\"\n}"
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 404,\n  \"message\": \"Department not found\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "6. Delete Department (run last)",
+          "item": [
+            {
+              "name": "6. Delete Department - Success (uses departmentId from step 1, run LAST)",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments/{{departmentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments",
+                    "{{departmentId}}"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK",
+                  "originalRequest": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments/{{departmentId}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments",
+                        "{{departmentId}}"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Department deleted successfully\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Delete Department - Not Found",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Departments/000000000000000000000000",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Departments",
+                    "000000000000000000000000"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "404 Not Found",
+                  "originalRequest": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Departments/000000000000000000000000",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Departments",
+                        "000000000000000000000000"
+                      ]
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 404,\n  \"message\": \"Department not found\"\n}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

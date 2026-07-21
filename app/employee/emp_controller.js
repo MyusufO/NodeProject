@@ -1,16 +1,22 @@
 const employeeService = require("./emp_services");
 
-const updateProfile = async (req, res,next) => {
-    try {
-        const employee = await employeeService.updateProfile(req.body);
+const updateProfile = async (req, res, next) => {
+  try {
+    const updates = { ...req.body, employeeId: req.user.employee_id };
 
-        return res.status(200).json({
-            message: "Profile updated successfully",
-            employee,
-        });
-    } catch (error) {
-        next(error)
+    if (req.file) {
+      updates.profilePicture = `/uploads/profile-pictures/${req.file.filename}`;
     }
+
+    const employee = await employeeService.updateProfile(updates);
+
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      employee,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 const deleteProfile = async (req, res,next) => {
@@ -73,6 +79,16 @@ const addEmployee = async (req, res,next) => {
     }
 };
 
+
+const deleteProfilePicture = async (req, res, next) => {
+  try {
+    await employeeService.deleteProfilePicture(req.user.employee_id);
+    return res.status(200).json({ message: "Profile picture removed" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
     updateProfile,
     deleteProfile,
@@ -80,4 +96,5 @@ module.exports = {
     searchEmployees,
     updateEmployeeRole,
     addEmployee,
+    deleteProfilePicture
 };

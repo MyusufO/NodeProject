@@ -1,0 +1,921 @@
+{
+  "info": {
+    "name": "NodeProject - Leaves",
+    "description": "Leave endpoints. Run folder 1 first (Apply Leave auto-saves {{leaveId}}); folder 2/3 just read. Folders 4a and 4b both act on the SAME leave and are alternatives to each other (approve vs cancel) - run one, not both, against a given leaveId, or re-run Apply Leave to get a fresh Pending leave before trying the other. Requires {{token}} and {{employeeId}} (both set by the Users collection's Register/Login requests).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "employeeId",
+      "value": ""
+    },
+    {
+      "key": "leaveId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Leaves",
+      "item": [
+        {
+          "name": "1. Apply Leave",
+          "item": [
+            {
+              "name": "1. Apply Leave - Success",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Leaves",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Leaves"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"startDate\": \"2026-08-10\",\n  \"endDate\": \"2026-08-12\",\n  \"reason\": \"Not feeling well, need rest\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "201 Created",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Leaves",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Leaves"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"startDate\": \"2026-08-10\",\n  \"endDate\": \"2026-08-12\",\n  \"reason\": \"Not feeling well, need rest\"\n}"
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"_id\": \"<mongo id - captured automatically>\",\n  \"employee\": \"{{employeeId}}\",\n  \"startDate\": \"2026-08-10T00:00:00.000Z\",\n  \"endDate\": \"2026-08-12T00:00:00.000Z\",\n  \"reason\": \"Not feeling well, need rest\",\n  \"status\": \"Pending\",\n  \"createdAt\": \"2026-07-21T10:00:00.000Z\"\n}"
+                }
+              ],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Auto-save the new leave's id for the requests below",
+                      "if (pm.response.code === 201) {",
+                      "    const data = pm.response.json();",
+                      "    if (data._id) {",
+                      "        pm.environment.set(\"leaveId\", data._id);",
+                      "        console.log(\"Saved leaveId:\", data._id);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Apply Leave - Overlaps Existing Leave (run after step 1)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Leaves",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Leaves"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"startDate\": \"2026-08-11\",\n  \"endDate\": \"2026-08-13\",\n  \"reason\": \"Family trip planned\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "409 Conflict",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Leaves",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Leaves"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"startDate\": \"2026-08-11\",\n  \"endDate\": \"2026-08-13\",\n  \"reason\": \"Family trip planned\"\n}"
+                    }
+                  },
+                  "status": "Conflict",
+                  "code": 409,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 409,\n  \"message\": \"Leave overlaps with an existing leave.\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Apply Leave - Validation Error (endDate before startDate)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Leaves",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Leaves"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"startDate\": \"2026-08-12\",\n  \"endDate\": \"2026-08-10\",\n  \"reason\": \"Bad\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "400 Bad Request",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Leaves",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Leaves"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"startDate\": \"2026-08-12\",\n  \"endDate\": \"2026-08-10\",\n  \"reason\": \"Bad\"\n}"
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Validation failed\",\n  \"errors\": [\n    \"endDate must be greater than \\\"ref:startDate\\\"\",\n    \"reason length must be at least 5 characters long\"\n  ]\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "2. Get Leave Balance",
+          "item": [
+            {
+              "name": "2. Get Leave Balance - Success (uses employeeId)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Leaves/{{employeeId}}/balance",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Leaves",
+                    "{{employeeId}}",
+                    "balance"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Leaves/{{employeeId}}/balance",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Leaves",
+                        "{{employeeId}}",
+                        "balance"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"leaveBalance\": 12\n}"
+                }
+              ]
+            },
+            {
+              "name": "Get Leave Balance - Employee Not Found",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Leaves/000000000000000000000000/balance",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Leaves",
+                    "000000000000000000000000",
+                    "balance"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "404 Not Found",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Leaves/000000000000000000000000/balance",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Leaves",
+                        "000000000000000000000000",
+                        "balance"
+                      ]
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 404,\n  \"message\": \"Employee not found\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "3. Get Leave History",
+          "item": [
+            {
+              "name": "3. Get Leave History - Success",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Leaves/history",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Leaves",
+                    "history"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Leaves/history",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Leaves",
+                        "history"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "[\n  {\n    \"_id\": \"{{leaveId}}\",\n    \"employee\": \"{{employeeId}}\",\n    \"startDate\": \"2026-08-10T00:00:00.000Z\",\n    \"endDate\": \"2026-08-12T00:00:00.000Z\",\n    \"reason\": \"Not feeling well, need rest\",\n    \"status\": \"Pending\",\n    \"approvedBy\": null,\n    \"createdAt\": \"2026-07-21T10:00:00.000Z\"\n  }\n]"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "4a. Approve or Reject Leave (Manager)",
+          "item": [
+            {
+              "name": "4a. Approve/Reject Leave - Success (Manager, uses leaveId from step 1)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Leaves/{{leaveId}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Leaves",
+                    "{{leaveId}}",
+                    "status"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"Approved\",\n  \"remarks\": \"Approved, enjoy your leave\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Leaves/{{leaveId}}/status",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Leaves",
+                        "{{leaveId}}",
+                        "status"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"status\": \"Approved\",\n  \"remarks\": \"Approved, enjoy your leave\"\n}"
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Leave status updated successfully\",\n  \"leave\": {\n    \"_id\": \"{{leaveId}}\",\n    \"status\": \"Approved\",\n    \"approvedBy\": \"665f1c2e4b3a2a0012ab3701\",\n    \"remarks\": \"Approved, enjoy your leave\"\n  }\n}"
+                }
+              ]
+            },
+            {
+              "name": "Approve/Reject Leave - Not Authorized (Not a Manager)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Leaves/{{leaveId}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Leaves",
+                    "{{leaveId}}",
+                    "status"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"Approved\",\n  \"remarks\": \"Approved\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "403 Forbidden",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Leaves/{{leaveId}}/status",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Leaves",
+                        "{{leaveId}}",
+                        "status"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"status\": \"Approved\",\n  \"remarks\": \"Approved\"\n}"
+                    }
+                  },
+                  "status": "Forbidden",
+                  "code": 403,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"You are not authorized to change leave status\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Approve/Reject Leave - Already Processed (run after 4a)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Leaves/{{leaveId}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Leaves",
+                    "{{leaveId}}",
+                    "status"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"Rejected\",\n  \"remarks\": \"Too late\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "409 Conflict",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Leaves/{{leaveId}}/status",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Leaves",
+                        "{{leaveId}}",
+                        "status"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"status\": \"Rejected\",\n  \"remarks\": \"Too late\"\n}"
+                    }
+                  },
+                  "status": "Conflict",
+                  "code": 409,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 409,\n  \"message\": \"Leave has already been processed\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Approve/Reject Leave - Insufficient Leave Balance",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Leaves/{{leaveId}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Leaves",
+                    "{{leaveId}}",
+                    "status"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"Approved\",\n  \"remarks\": \"Approved\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "name": "400 Bad Request",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Leaves/{{leaveId}}/status",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Leaves",
+                        "{{leaveId}}",
+                        "status"
+                      ]
+                    },
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"status\": \"Approved\",\n  \"remarks\": \"Approved\"\n}"
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 400,\n  \"message\": \"Insufficient leave balance\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "4b. Cancel Leave (alternative to 4a)",
+          "item": [
+            {
+              "name": "4b. Cancel Leave - Success (uses leaveId from step 1 - alternative to 4a, don't run both on the same leave)",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Leaves/{{leaveId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Leaves",
+                    "{{leaveId}}"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 OK",
+                  "originalRequest": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Leaves/{{leaveId}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Leaves",
+                        "{{leaveId}}"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"message\": \"Leave cancelled successfully\",\n  \"leave\": {\n    \"_id\": \"{{leaveId}}\",\n    \"status\": \"Cancelled\",\n    \"employee\": \"{{employeeId}}\"\n  }\n}"
+                }
+              ]
+            },
+            {
+              "name": "Cancel Leave - Not Found",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Leaves/000000000000000000000000",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Leaves",
+                    "000000000000000000000000"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "404 Not Found",
+                  "originalRequest": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Leaves/000000000000000000000000",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Leaves",
+                        "000000000000000000000000"
+                      ]
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 404,\n  \"message\": \"Leave not found\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Cancel Leave - Cannot Cancel After It Has Started",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/Leaves/{{leaveId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "Leaves",
+                    "{{leaveId}}"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "400 Bad Request",
+                  "originalRequest": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/Leaves/{{leaveId}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "Leaves",
+                        "{{leaveId}}"
+                      ]
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\n  \"success\": false,\n  \"statusCode\": 400,\n  \"message\": \"Cannot cancel after leave has started\"\n}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

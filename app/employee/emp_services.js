@@ -5,39 +5,40 @@ const bcrypt = require("bcrypt");
 
 
 const updateProfile = async (data) => {
-    const { employeeId, name, email, phone } = data;
+  const { employeeId, name, email, phone, profilePicture } = data;
 
-    const employee = await Employee.findById(employeeId);
+  const employee = await Employee.findById(employeeId);
 
-    if (!employee) {
-        const error = new Error("Employee not found");
-        error.statusCode = 404;
-        throw error;
+  if (!employee) {
+    const error = new Error("Employee not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (email && email !== employee.email) {
+    const existingEmployee = await Employee.findOne({ email });
+    if (existingEmployee) {
+      const error = new Error("Email already exists");
+      error.statusCode = 409;
+      throw error;
     }
+    employee.email = email;
+  }
 
-    if (email && email !== employee.email) {
-        const existingEmployee = await Employee.findOne({ email });
+  if (name) employee.name = name;
+  if (phone) employee.phone = phone;
 
-        if (existingEmployee) {
-            const error = new Error("Email already exists");
-            error.statusCode = 409;
-            throw error;
-        }
-
-        employee.email = email;
+  if (profilePicture) {
+    // delete the old file before pointing to the new one
+    if (employee.profilePicture) {
+      const oldPath = path.join(__dirname, "..", "..", employee.profilePicture);
+      await fs.unlink(oldPath).catch(() => {});
     }
+    employee.profilePicture = profilePicture;
+  }
 
-    if (name) {
-        employee.name = name;
-    }
-
-    if (phone) {
-        employee.phone = phone;
-    }
-
-    await employee.save();
-
-    return employee;
+  await employee.save();
+  return employee;
 };
 
 const DeleteProfile = async (employeeId) => {
@@ -223,6 +224,24 @@ const bulkAddEmployees = async (employees) => {
     };
 };
 
+const deleteProfilePicture = async (employeeId) => {
+  const employee = await Employee.findById(employeeId);
+  if (!employee) {
+    const error = new Error("Employee not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (employee.profilePicture) {
+    const oldPath = path.join(__dirname, "..", "..", employee.profilePicture);
+    await fs.unlink(oldPath).catch(() => {});
+    employee.profilePicture = null;
+    await employee.save();
+  }
+
+  return employee;
+};
+
 module.exports = {
     updateProfile,
     DeleteProfile,
@@ -231,4 +250,5 @@ module.exports = {
     updateEmployeeRole,
     addSingleEmployee,
     bulkAddEmployees,
+    deleteProfilePicture
 };
