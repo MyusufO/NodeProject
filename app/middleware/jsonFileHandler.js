@@ -1,8 +1,4 @@
-// Parses a JSON file uploaded via multer (req.file) and attaches the
-// parsed data onto req.body[key], so it can flow straight into
-// validateSchema + the controller/service layer like any other request body.
-//
-// Usage: router.post("/bulk", upload.single("file"), jsonFileHandler({ key: "employees" }), ...)
+
 
 const jsonFileHandler = (options = {}) => {
   const { key = "data", required = true } = options;
@@ -36,6 +32,12 @@ const jsonFileHandler = (options = {}) => {
     }
 
     req.body[key] = parsed;
+
+    console.log(
+      `[${new Date().toISOString()}] --> ${req.method} ${req.originalUrl} (parsed file "${filename}" into req.body.${key})`,
+      { [key]: parsed }
+    );
+
     next();
   };
 };

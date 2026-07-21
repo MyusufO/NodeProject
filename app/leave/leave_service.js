@@ -121,6 +121,7 @@ const leaveStatus = async (id, status, managerId, remarks = "") => {
         employee.leaveBalance -= days;
 
         await employee.save();
+        
     }
 
     leave.status = status;

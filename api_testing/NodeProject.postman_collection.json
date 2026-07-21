@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "caacce92-c548-4f2b-b9aa-421166eee290",
-    "name": "NodeProject - HR Employee & Leave Management API",
-    "description": "Postman collection covering Auth, Employees (single + bulk JSON-file add), Departments, and Leaves endpoints.\n\nWorkflow:\n1. Run 'Register' (optional, creates a plain Employee) or use an existing Admin account.\n2. Run 'Login' — this auto-saves {{token}} and {{employeeId}} as collection variables.\n3. All other requests inherit the Bearer token automatically.\n4. Admin-only requests (add employee, delete employee, update role, create/update/delete department, update employee department) need an account whose role is 'Admin' in the DB.",
+    "_postman_id": "dd1945f3-b37c-4b18-a7b3-3d63ace21d32",
+    "name": "NodeProject - HR API Scenario Test Suite",
+    "description": "One request per scenario (success + expected failure) so you can trigger any single case and immediately see whether the response matches what the code should do.\n\nIMPORTANT — requires validateSchema.js fix: the original validateSchema(schema, source) middleware ignored the 'source' argument and always validated req.body, which made every route using \"params\"/\"query\" (get/delete employee, search, get/delete department, cancel leave, get leave balance) always return 400 regardless of input. Apply the corrected validateSchema.js (validates req[source]) before running this collection, or the 'success' cases for those routes will fail.\n\nSETUP: run '0. Setup' folder first (Login as Employee / Admin / Manager). Fill in adminEmail/adminPassword and managerEmail/managerPassword collection variables with real seeded accounts first — register only creates Employee-role accounts.\n\nRun folders top-to-bottom within themselves; later requests in a folder often depend on variables set by earlier ones (e.g. departmentId, leaveId).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -10,7 +10,7 @@
     "bearer": [
       {
         "key": "token",
-        "value": "{{token}}",
+        "value": "{{employeeToken}}",
         "type": "string"
       }
     ]
@@ -22,7 +22,7 @@
       "type": "string"
     },
     {
-      "key": "token",
+      "key": "employeeToken",
       "value": "",
       "type": "string"
     },
@@ -32,19 +32,64 @@
       "type": "string"
     },
     {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminEmail",
+      "value": "REPLACE_WITH_SEEDED_ADMIN_EMAIL",
+      "type": "string"
+    },
+    {
+      "key": "adminPassword",
+      "value": "REPLACE_WITH_SEEDED_ADMIN_PASSWORD",
+      "type": "string"
+    },
+    {
+      "key": "managerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "managerEmail",
+      "value": "REPLACE_WITH_SEEDED_MANAGER_EMAIL",
+      "type": "string"
+    },
+    {
+      "key": "managerPassword",
+      "value": "REPLACE_WITH_SEEDED_MANAGER_PASSWORD",
+      "type": "string"
+    },
+    {
       "key": "departmentId",
       "value": "",
+      "type": "string"
+    },
+    {
+      "key": "roleId",
+      "value": "REPLACE_WITH_A_VALID_ROLE_ID",
       "type": "string"
     },
     {
       "key": "leaveId",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "leaveBalanceBefore",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "nonexistentId",
+      "value": "000000000000000000000000",
+      "type": "string"
     }
   ],
   "item": [
     {
-      "name": "Auth",
+      "name": "0. Setup",
       "item": [
         {
           "name": "Health Check",
@@ -60,51 +105,28 @@
                 "Users"
               ]
             },
-            "description": "Simple check that the Users route is mounted and responding.",
+            "description": "",
             "auth": {
               "type": "noauth"
             }
           },
-          "response": []
-        },
-        {
-          "name": "Register",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
               }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/Users/register",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "Users",
-                "register"
-              ]
-            },
-            "description": "Creates a new Employee with the default 'Employee' role. To test Admin-only routes, promote this account's role directly in the DB, or seed an Admin account.",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"Password123\",\n  \"phone\": \"9876543210\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
             }
-          },
-          "response": []
+          ]
         },
         {
-          "name": "Login",
+          "name": "Login as Employee",
           "request": {
             "method": "POST",
             "header": [
@@ -123,7 +145,7 @@
                 "login"
               ]
             },
-            "description": "Logs in and saves the returned JWT + employee id into collection variables ({{token}}, {{employeeId}}) so every other request in this collection can reuse them automatically.",
+            "description": "Run 'Register - Success' first if this account doesn't exist yet.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"Password123\"\n}",
@@ -144,15 +166,486 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.token) {",
-                  "    pm.collectionVariables.set(\"token\", res.token);",
-                  "}",
-                  "if (res.employee && res.employee.id) {",
-                  "    pm.collectionVariables.set(\"employeeId\", res.employee.id);",
-                  "}",
                   "pm.test(\"Status code is 200\", function () {",
                   "    pm.response.to.have.status(200);",
+                  "});",
+                  "const res = pm.response.json();",
+                  "if (res.token) { pm.collectionVariables.set(\"employeeToken\", res.token); }",
+                  "if (res.employee && res.employee.id) { pm.collectionVariables.set(\"employeeId\", res.employee.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Users",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const res = pm.response.json();",
+                  "if (res.token) { pm.collectionVariables.set(\"adminToken\", res.token); }",
+                  "if (res.employee && res.employee.id) { pm.collectionVariables.set(\"adminId\", res.employee.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Manager",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Users",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{managerEmail}}\",\n  \"password\": \"{{managerPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const res = pm.response.json();",
+                  "if (res.token) { pm.collectionVariables.set(\"managerToken\", res.token); }",
+                  "if (res.employee && res.employee.id) { pm.collectionVariables.set(\"managerId\", res.employee.id); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Register - Success (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Users/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Users",
+                "register"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"Password123\",\n  \"phone\": \"9876543210\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register - Duplicate Email (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Users/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Users",
+                "register"
+              ]
+            },
+            "description": "Run 'Register - Success' first so this email already exists.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"Password123\",\n  \"phone\": \"9876543211\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test(\"Error message mentions 'already exists'\", function () {",
+                  "    const res = pm.response.json();",
+                  "    const msg = JSON.stringify(res).toLowerCase();",
+                  "    pm.expect(msg).to.include(\"already exists\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register - Invalid Phone Format (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Users/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Users",
+                "register"
+              ]
+            },
+            "description": "phone must match /^[6-9][0-9]{9}$/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bad Phone\",\n  \"email\": \"badphone@example.com\",\n  \"password\": \"Password123\",\n  \"phone\": \"12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Error message mentions 'phone'\", function () {",
+                  "    const res = pm.response.json();",
+                  "    const msg = JSON.stringify(res).toLowerCase();",
+                  "    pm.expect(msg).to.include(\"phone\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register - Password Too Short (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Users/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Users",
+                "register"
+              ]
+            },
+            "description": "password must be >= 8 chars",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Short Pw\",\n  \"email\": \"shortpw@example.com\",\n  \"password\": \"abc123\",\n  \"phone\": \"9123456789\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Success (200)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Users",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"Password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response contains token\", function () {",
+                  "    pm.expect(pm.response.json().token).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Wrong Password (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Users",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"WrongPassword1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test(\"Error message mentions 'invalid email or password'\", function () {",
+                  "    const res = pm.response.json();",
+                  "    const msg = JSON.stringify(res).toLowerCase();",
+                  "    pm.expect(msg).to.include(\"invalid email or password\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Non-existent Email (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Users",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"doesnotexist@example.com\",\n  \"password\": \"Password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test(\"Error message mentions 'invalid email or password'\", function () {",
+                  "    const res = pm.response.json();",
+                  "    const msg = JSON.stringify(res).toLowerCase();",
+                  "    pm.expect(msg).to.include(\"invalid email or password\");",
                   "});"
                 ]
               }
@@ -162,10 +655,10 @@
       ]
     },
     {
-      "name": "Employees",
+      "name": "2. Employees",
       "item": [
         {
-          "name": "Add Employee (Single)",
+          "name": "Add Employee - Success (201)",
           "request": {
             "method": "POST",
             "header": [
@@ -183,7 +676,7 @@
                 "employees"
               ]
             },
-            "description": "Admin only. Sends a normal JSON body -> creates one employee with the default Employee role.",
+            "description": "",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"John Smith\",\n  \"email\": \"john.smith@example.com\",\n  \"phone\": \"9123456780\",\n  \"password\": \"Password123\"\n}",
@@ -192,12 +685,205 @@
                   "language": "json"
                 }
               }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Add Employees (Bulk via JSON File)",
+          "name": "Add Employee - Duplicate Email (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees"
+              ]
+            },
+            "description": "Run 'Add Employee - Success' first.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Smith\",\n  \"email\": \"john.smith@example.com\",\n  \"phone\": \"9123456781\",\n  \"password\": \"Password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test(\"Error message mentions 'already exists'\", function () {",
+                  "    const res = pm.response.json();",
+                  "    const msg = JSON.stringify(res).toLowerCase();",
+                  "    pm.expect(msg).to.include(\"already exists\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Employee - Missing Password (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"No Password\",\n  \"email\": \"nopassword@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Employee - Forbidden for Non-Admin (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees"
+              ]
+            },
+            "description": "Uses employeeToken instead of adminToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Should Fail\",\n  \"email\": \"shouldfail@example.com\",\n  \"password\": \"Password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Employees - Bulk via JSON File (201)",
           "request": {
             "method": "POST",
             "header": [],
@@ -210,7 +896,7 @@
                 "employees"
               ]
             },
-            "description": "Admin only. Upload a .json file under the 'file' field containing an array of employees -> bulk-adds them, skipping any duplicates. Select the file manually in the Body > form-data tab before sending.",
+            "description": "",
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -218,15 +904,43 @@
                   "key": "file",
                   "type": "file",
                   "src": [],
-                  "description": "Attach a .json file whose content is an array of employee objects, e.g. [{ \"name\": \"...\", \"email\": \"...\", \"password\": \"...\" }, ...]"
+                  "description": "Attach a .json file: an array of { name, email, password, phone? }"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
                 }
               ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Has created/skipped arrays\", function () {",
+                  "    pm.expect(res.created).to.be.an(\"array\");",
+                  "    pm.expect(res.skipped).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Update Profile",
+          "name": "Update Profile - Success (200)",
           "request": {
             "method": "PUT",
             "header": [
@@ -244,21 +958,99 @@
                 "employees"
               ]
             },
-            "description": "Updates the logged-in / specified employee's profile. Requires employeeId + at least one field to change.",
+            "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"name\": \"Jane D. Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"phone\": \"9876543211\"\n}",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"name\": \"Jane D. Doe\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Get Employee Details",
+          "name": "Update Profile - No Fields To Update (400)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees"
+              ]
+            },
+            "description": "Schema requires employeeId + at least one other field (.min(2)).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Employee Details - Success (200)",
           "request": {
             "method": "GET",
             "header": [],
@@ -272,17 +1064,85 @@
                 "{{employeeId}}"
               ]
             },
-            "description": ""
+            "description": "Requires the validateSchema.js fix (params source).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returned employee matches employeeId\", function () {",
+                  "    pm.expect(pm.response.json()._id).to.eql(pm.collectionVariables.get(\"employeeId\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Search Employees",
+          "name": "Get Employee Details - Not Found (404)",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/employees/search/filter?name=John",
+              "raw": "{{baseUrl}}/employees/{{nonexistentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees",
+                "{{nonexistentId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search Employees - Success (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/employees/search/filter?name=Jane",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -294,16 +1154,85 @@
               "query": [
                 {
                   "key": "name",
-                  "value": "John"
+                  "value": "Jane"
                 }
               ]
             },
-            "description": "At least one query param (name, email, phone, role, department) is required."
+            "description": "Requires the validateSchema.js fix (query source).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns employees array\", function () {",
+                  "    pm.expect(pm.response.json().employees).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Update Employee Role",
+          "name": "Search Employees - No Query Params (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/employees/search/filter",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees",
+                "search",
+                "filter"
+              ]
+            },
+            "description": "Schema requires at least one search param (.min(1)).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Employee Role - Success (200)",
           "request": {
             "method": "PUT",
             "header": [
@@ -322,21 +1251,142 @@
                 "role"
               ]
             },
-            "description": "Admin only. roleId must be a valid Role document's _id (Admin/Manager/Employee).",
+            "description": "Fill in roleId collection variable with a real Role _id first.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"roleId\": \"REPLACE_WITH_ROLE_ID\"\n}",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"roleId\": \"{{roleId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Delete Employee",
+          "name": "Update Employee Role - Forbidden for Non-Admin (403)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees",
+                "role"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"roleId\": \"{{roleId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Employee - Not Found (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/employees/{{nonexistentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees",
+                "{{nonexistentId}}"
+              ]
+            },
+            "description": "Requires the validateSchema.js fix (params source).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Employee - Forbidden for Non-Admin (403)",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -350,35 +1400,40 @@
                 "{{employeeId}}"
               ]
             },
-            "description": "Admin only."
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Departments",
+      "name": "3. Departments",
       "item": [
         {
-          "name": "Get All Departments",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/Departments/",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "Departments"
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Create Department",
+          "name": "Create Department - Success (201)",
           "request": {
             "method": "POST",
             "header": [
@@ -396,21 +1451,199 @@
                 "Departments"
               ]
             },
-            "description": "Admin only.",
+            "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Engineering\",\n  \"description\": \"Handles product development\"\n}",
+              "raw": "{\n  \"departmentName\": \"Engineering\",\n  \"departmentCode\": \"ENG\",\n  \"description\": \"Handles product development\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.collectionVariables.set(\"departmentId\", pm.response.json()._id);",
+                  "pm.test(\"Department created\", function () {",
+                  "    pm.expect(pm.response.json()._id).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Get Department By Id",
+          "name": "Create Department - Missing departmentCode (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Departments/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Departments"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"departmentName\": \"Marketing\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Department - Forbidden for Non-Admin (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Departments/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Departments"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"departmentName\": \"Sales\",\n  \"departmentCode\": \"SAL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Departments - Success (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Departments/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Departments"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Department By Id - Success (200)",
           "request": {
             "method": "GET",
             "header": [],
@@ -424,12 +1657,77 @@
                 "{{departmentId}}"
               ]
             },
-            "description": ""
+            "description": "Requires the validateSchema.js fix (params source).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Update Department",
+          "name": "Get Department By Id - Not Found (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Departments/{{nonexistentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Departments",
+                "{{nonexistentId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Department - Success (200)",
           "request": {
             "method": "PUT",
             "header": [
@@ -448,21 +1746,44 @@
                 "{{departmentId}}"
               ]
             },
-            "description": "Admin only.",
+            "description": "Note: updateDepartmentSchema uses 'name' while createDepartmentSchema uses 'departmentName' — inconsistent field naming in the original code, not a typo here.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Engineering & R&D\",\n  \"description\": \"Handles product development and research\"\n}",
+              "raw": "{\n  \"name\": \"Engineering & R&D\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Update Employee Department",
+          "name": "Update Employee Department - Success (200)",
           "request": {
             "method": "PUT",
             "header": [
@@ -484,7 +1805,7 @@
                 "{{departmentId}}"
               ]
             },
-            "description": "Admin only. Note: the service reads employeeId/newDepartmentId from the body, not the URL params, so both must be included.",
+            "description": "dept_service.js reads employeeId/newDepartmentId from the body, not the URL params.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"newDepartmentId\": \"{{departmentId}}\"\n}",
@@ -493,12 +1814,77 @@
                   "language": "json"
                 }
               }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Delete Department",
+          "name": "Delete Department - Not Found (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Departments/{{nonexistentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Departments",
+                "{{nonexistentId}}"
+              ]
+            },
+            "description": "Requires the validateSchema.js fix (params source).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Department - Success (200)",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -512,17 +1898,40 @@
                 "{{departmentId}}"
               ]
             },
-            "description": "Admin only."
+            "description": "Run last — deletes the department created above.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Leaves",
+      "name": "4. Leaves",
       "item": [
         {
-          "name": "Apply Leave",
+          "name": "Apply Leave - Success (201)",
           "request": {
             "method": "POST",
             "header": [
@@ -543,12 +1952,22 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2026-08-05\",\n  \"reason\": \"Family vacation\"\n}",
+              "raw": "{\n  \"startDate\": \"2026-09-01\",\n  \"endDate\": \"2026-09-03\",\n  \"reason\": \"Personal errand\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
             }
           },
           "response": [],
@@ -558,56 +1977,130 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const res = pm.response.json();",
-                  "if (res && res._id) {",
-                  "    pm.collectionVariables.set(\"leaveId\", res._id);",
-                  "}"
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.collectionVariables.set(\"leaveId\", pm.response.json()._id);",
+                  "pm.test(\"Leave is Pending\", function () {",
+                  "    pm.expect(pm.response.json().status).to.eql(\"Pending\");",
+                  "});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Leave Balance",
+          "name": "Apply Leave - End Date Before Start Date (400)",
           "request": {
-            "method": "GET",
-            "header": [],
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/Leaves/{{employeeId}}/balance",
+              "raw": "{{baseUrl}}/Leaves/",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "Leaves",
-                "{{employeeId}}",
-                "balance"
+                "Leaves"
               ]
             },
-            "description": ""
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"2026-09-10\",\n  \"endDate\": \"2026-09-05\",\n  \"reason\": \"Invalid date range\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Leave History",
+          "name": "Apply Leave - Overlapping Leave (409)",
           "request": {
-            "method": "GET",
-            "header": [],
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/Leaves/history",
+              "raw": "{{baseUrl}}/Leaves/",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "Leaves",
-                "history"
+                "Leaves"
               ]
             },
-            "description": ""
+            "description": "Run 'Apply Leave - Success' first so there's a Pending leave to overlap with.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"2026-09-02\",\n  \"endDate\": \"2026-09-04\",\n  \"reason\": \"Overlaps with the leave above\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Approve/Reject Leave",
+          "name": "Approve Leave - Success (200)",
           "request": {
             "method": "PUT",
             "header": [
@@ -627,7 +2120,7 @@
                 "status"
               ]
             },
-            "description": "Manager only. The logged-in user must have role 'Manager'.",
+            "description": "",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"Approved\",\n  \"remarks\": \"Approved by manager\"\n}",
@@ -636,12 +2129,290 @@
                   "language": "json"
                 }
               }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Leave status is Approved\", function () {",
+                  "    pm.expect(pm.response.json().leave.status).to.eql(\"Approved\");",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Cancel Leave",
+          "name": "Approve Leave - Already Processed (409)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Leaves/{{leaveId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Leaves",
+                "{{leaveId}}",
+                "status"
+              ]
+            },
+            "description": "Run 'Approve Leave - Success' first so this leave is no longer Pending.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\",\n  \"remarks\": \"Trying again\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Approve Leave - Forbidden for Non-Manager (403)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Leaves/{{leaveId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Leaves",
+                "{{leaveId}}",
+                "status"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\",\n  \"remarks\": \"Should fail\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Leave Balance - Before",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Leaves/{{employeeId}}/balance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Leaves",
+                "{{employeeId}}",
+                "balance"
+              ]
+            },
+            "description": "Requires the validateSchema.js fix (params source).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.collectionVariables.set(\"leaveBalanceBefore\", pm.response.json().leaveBalance);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Leave Balance - THE ACTUAL CHECK (decreased after approval)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Leaves/{{employeeId}}/balance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Leaves",
+                "{{employeeId}}",
+                "balance"
+              ]
+            },
+            "description": "Run after 'Approve Leave - Success' on a leave applied AFTER 'Get Leave Balance - Before' ran, so the delta reflects that one leave.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const before = Number(pm.collectionVariables.get(\"leaveBalanceBefore\"));",
+                  "const after = pm.response.json().leaveBalance;",
+                  "console.log(\"Balance before:\", before, \"| Balance after:\", after);",
+                  "pm.test(\"Balance decreased\", function () {",
+                  "    pm.expect(after).to.be.lessThan(before);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Leave History - Success (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Leaves/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Leaves",
+                "history"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns an array\", function () {",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel Leave - Not Owner (403)",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -655,9 +2426,74 @@
                 "{{leaveId}}"
               ]
             },
-            "description": ""
+            "description": "Requires the validateSchema.js fix (params source). Uses adminToken, which is not the leave's owner.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel Leave - Not Found (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Leaves/{{nonexistentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Leaves",
+                "{{nonexistentId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     }
